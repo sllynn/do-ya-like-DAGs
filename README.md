@@ -24,9 +24,11 @@ For questions regarding Airflow itself, the docs site is very comprehensive and 
 
 - Use conda to create and activate a new airflow environment:
   - `conda create -n airflow python=3.7`
+  - `conda config --add channels conda-forge`
+  - `conda config --set channel_priority strict`
   - `conda activate airflow`
   
-- Install airflow (using pip as it is not available on conda-forge): `pip install airflow`
+- Install airflow: `conda install airflow`
 
 - Run the database set-up routine: `airflow initdb`
 
@@ -56,7 +58,7 @@ For questions regarding Airflow itself, the docs site is very comprehensive and 
   	--conn_extra '{"token": "<your personal access token>"}'
   ```
   
-  - If you do create a new connection for your workspace, you must remember to specify this using the `databricks_conn_id` parameter in calls to `DatabricksSubmitRunOperator` and `DatabricksRunNowOperator`.
+  - If you do create a _new_ connection for your workspace, you must remember to specify this using the `databricks_conn_id` parameter in calls to `DatabricksSubmitRunOperator` and `DatabricksRunNowOperator`.
 
 
 
@@ -170,6 +172,7 @@ spark_jar_task.set_downstream(spark_python_task)
 - Store your scripts in `~/airflow/dags/`
 - To see the full list of DAGs available and see if the `example_dependent_databricks_jobs` is now present, run `airflow list_dags`
 - You can enable or trigger your DAG in the scheduler using the web UI or trigger it manually using: `airflow trigger_dag example_sequential_tasks`
+- You can debug DAG runs by looking at the airflow logs, availble in the 'DAGs' tab in the web UI.
 
 
 
