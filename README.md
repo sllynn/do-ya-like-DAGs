@@ -20,7 +20,7 @@ For questions regarding Airflow itself, the docs site is very comprehensive and 
 
 - If you're using containers or EC2 then port 8080 needs to be open to access the scheduler user interface
 
-- Install Miniconda (if not already available)
+- Install Miniconda (if Conda is not already available) from [here](https://docs.conda.io/en/latest/miniconda.html).
 
 - Use conda to create and activate a new airflow environment:
   - `conda create -n airflow python=3.7`
@@ -169,9 +169,9 @@ spark_jar_task.set_downstream(spark_python_task)
 
 ```
 
-- Store your scripts in `~/airflow/dags/`
-- To see the full list of DAGs available and see if the `example_dependent_databricks_jobs` is now present, run `airflow list_dags`
-- You can enable or trigger your DAG in the scheduler using the web UI or trigger it manually using: `airflow trigger_dag example_sequential_tasks`
+- Store your DAG definition script(s) in `~/airflow/dags/`.
+- To see the full list of DAGs available and see if the `example_dependent_databricks_jobs` is now present, run `airflow list_dags`.
+- You can enable or trigger your DAG in the scheduler using the web UI or trigger it manually using: `airflow trigger_dag example_dependent_databricks_jobs`.
 - You can debug DAG runs by looking at the airflow logs, availble in the 'DAGs' tab in the web UI.
 
 
