@@ -72,12 +72,13 @@ For questions regarding Airflow itself, the docs site is very comprehensive and 
 from datetime import timedelta, datetime
 from airflow import DAG
 from airflow.contrib.operators.databricks_operator import DatabricksRunNowOperator, DatabricksSubmitRunOperator
+```
 
-# In this example, we will create an airflow 'DAG' that will execute a notebook and spark JAR task
-# independently and, once the first two jobs have successfully completed, a python script.
+In this example, we will create an airflow 'DAG' that will execute a notebook and spark JAR task independently and, once the first two jobs have successfully completed, a python script.
 
-# The starting point is the DAG, itself. It has some basic parameters around scheduling and alerting which
-# should be configured on instantiation.
+The starting point is the DAG, itself. It has some basic parameters around scheduling and alerting which should be configured on instantiation.
+
+```python
 dag = DAG(
     dag_id='example_dependent_databricks_jobs',
     start_date=datetime.today(),
@@ -91,11 +92,11 @@ dag = DAG(
         retry_delay=timedelta(minutes=5)
     )
 )
+```
 
-# Our first task will execute a notebook on an 'ephemeral' cluster (i.e. the cluster is created purely to
-# execute the job and then torn down once the job is complete).
-# Let's assume our notebook also has a text widget, the value of which controls where output will be stored.
+Our first task will execute a notebook on an 'ephemeral' cluster (i.e. the cluster is created purely to execute the job and then torn down once the job is complete). Let's assume our notebook also has a text widget, the value of which controls where output will be stored.
 
+```python
 cluster_spec = {
     'spark_version': '6.0.x-scala2.11',
     'node_type_id': 'i3.xlarge',
@@ -114,23 +115,25 @@ notebook_task_params = {
         }
     },
 }
+```
 
-# The above block of key-value parameters are equivalent to the 'new cluster' and 'notebook task' objects
-# supplied to the Databricks Runs Submit API.
-# More info here: https://docs.databricks.com/dev-tools/api/latest/jobs.html#runs-submit
-# and here: https://docs.databricks.com/dev-tools/api/latest/jobs.html#newcluster
-# and here: https://docs.databricks.com/dev-tools/api/latest/jobs.html#notebooktask
+The above block of key-value parameters are equivalent to the 'new cluster' and 'notebook task' objects supplied to the Databricks Runs Submit API. More info
+- here: https://docs.databricks.com/dev-tools/api/latest/jobs.html#runs-submit
+- and here: https://docs.databricks.com/dev-tools/api/latest/jobs.html#newcluster
+- and here: https://docs.databricks.com/dev-tools/api/latest/jobs.html#notebooktask
 
-# We'll feed all of our parameters to the DatabricksSubmitRunOperator via its `JSON` parameter.
+We'll feed all of our parameters to the DatabricksSubmitRunOperator via its `JSON` parameter.
+```python
 notebook_task = DatabricksSubmitRunOperator(
     task_id='notebook_task',
     dag=dag,
     json=notebook_task_params)
+```
 
-# Our second task, which is independent of the first, executes a spark JAR (i.e. compiled Scala code).
-# Rather than construct our task in one block of key-value parameters, we'll use the named parameters
-# of DatabricksSubmitRunOperator to initialize the operator.
-# Again, this will create a new cluster for the duration of the task.
+Our second task, which is independent of the first, executes a spark JAR (i.e. compiled Scala code). Rather than construct our task in one block of key-value parameters, we'll use the named parameters of DatabricksSubmitRunOperator to initialize the operator.
+
+Again, this will create a new cluster for the duration of the task.
+```python
 spark_jar_task = DatabricksSubmitRunOperator(
     task_id='spark_jar_task',
     dag=dag,
@@ -144,32 +147,32 @@ spark_jar_task = DatabricksSubmitRunOperator(
         }
     ]
 )
-# The 'libraries' argument allows you to attach libraries to the cluster that will be instantiated
-# to execute the task.
+```
 
-# Finally, we have a python script that we wish to execute on an existing cluster, on successful completion
-# of both of the first two tasks.
+The 'libraries' argument allows you to attach libraries to the cluster that will be instantiated to execute the task.
 
-# In this case, the job is already defined in the Databricks workspace and `job_id` is used to identify it.
-# Arguments can be passed to the job using `notebook_params`, `python_params` or `spark_submit_params`
-# as appropriate.
-# The association with the existing cluster would be part of that existing job's definition and configurable through
-# the Jobs UI in the Databricks workspace.
+Finally, we have a python script that we wish to execute on an existing cluster, on successful completion of both of the first two tasks.
+
+In this case, the job is already defined in the Databricks workspace and `job_id` is used to identify it.
+Arguments can be passed to the job using `notebook_params`, `python_params` or `spark_submit_params` as appropriate.
+The association with the existing cluster would be part of that existing job's definition and configurable through the Jobs UI in the Databricks workspace.
+```python
 spark_python_task = DatabricksRunNowOperator(
     task_id='spark_python_task',
     dag=dag,
     job_id=1337,
     python_params=['country', 'DK']
 )
-
-# Define the order in which these jobs must run
-notebook_task.set_downstream(spark_python_task)
-spark_jar_task.set_downstream(spark_python_task)
-
-
 ```
 
-- Store your DAG definition script(s) in `~/airflow/dags/`.
+Define the order in which these jobs must run
+```python
+notebook_task.set_downstream(spark_python_task)
+spark_jar_task.set_downstream(spark_python_task)
+```
+
+Once you've written your DAG defintion script(s):
+- Store it / them in `~/airflow/dags/`.
 - To see the full list of DAGs available and see if the `example_dependent_databricks_jobs` is now present, run `airflow list_dags`.
 - You can enable or trigger your DAG in the scheduler using the web UI or trigger it manually using: `airflow trigger_dag example_dependent_databricks_jobs`.
 - You can debug DAG runs by looking at the airflow logs, availble in the 'DAGs' tab in the web UI.
